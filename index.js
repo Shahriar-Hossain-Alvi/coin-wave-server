@@ -60,6 +60,17 @@ async function run() {
             })
         }
 
+        //verify Admin
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const isAdmin = user?.role === 'admin';
+            if (!isAdmin) {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+            next();
+        }
 
         //store users data after signup
         app.post('/signup', async (req, res) => {
@@ -123,7 +134,7 @@ async function run() {
 
 
         //get all user list for admin
-        app.get('/allUsers', async (req, res) => {
+        app.get('/allUsers', verifyToken, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
 
             res.send(result);
