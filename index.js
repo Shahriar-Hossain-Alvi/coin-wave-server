@@ -79,8 +79,6 @@ async function run() {
 
             const result = await usersCollection.insertOne(newUser);
 
-            console.log(result);
-
             res.send(result);
         })
 
@@ -112,14 +110,23 @@ async function run() {
             res.send({ token });
         })
 
+
+        //get logged in user info
         app.get('/user', verifyToken, async (req, res) => {
             const user = await usersCollection.findOne({ email: req.decoded.email });
-            console.log(req.decoded.email);
 
             if (!user) {
                 return res.send({ message: 'User not found' });
             }
             res.send(user);
+        })
+
+
+        //get all user list for admin
+        app.get('/allUsers', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+
+            res.send(result);
         })
 
 
