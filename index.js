@@ -105,6 +105,12 @@ async function run() {
                 return res.send({ message: "User not found. Sign up first if you don't have an account" });
             }
 
+            if (user.status === 'pending') {
+                const accountStatus = user.status;
+                const message = "Account is not activated";
+                return res.send({ accountStatus, message });
+            }
+
             // Compare the provided PIN with the stored hashed PIN
             const isMatch = bcrypt.compareSync(pin.toString(), user.pin);
 
@@ -138,6 +144,14 @@ async function run() {
             const result = await usersCollection.find().toArray();
 
             res.send(result);
+        })
+
+        //update user status by admin
+        app.patch('/user', async (req, res) => {
+            const userData = req.body;
+            console.log(userData);
+
+            res.send("data received");
         })
 
 
