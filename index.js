@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
@@ -111,6 +111,12 @@ async function run() {
                 return res.send({ accountStatus, message });
             }
 
+            if (user.status === 'blocked') {
+                const accountStatus = user.status;
+                const message = "Your account has been blocked";
+                return res.send({ accountStatus, message });
+            }
+
             // Compare the provided PIN with the stored hashed PIN
             const isMatch = bcrypt.compareSync(pin.toString(), user.pin);
 
@@ -147,11 +153,41 @@ async function run() {
         })
 
         //update user status by admin
-        app.patch('/user', async (req, res) => {
-            const userData = req.body;
-            console.log(userData);
+        app.patch('/user', verifyToken, verifyAdmin, async (req, res) => {
+            const { id, status } = req.body;
 
-            res.send("data received");
+            const filter = { _id: new ObjectId(id) };
+
+            const updateDocument = {
+                $set: {
+                    status: status,
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDocument);
+
+            res.send(result)
+        })
+
+
+        //update user info after first login
+        app.patch('/usersFirstLogin', async (req, res) => {
+            const { id } = req.body;
+
+            const filter = { _id: new ObjectId(id) };
+            const user = await usersCollection.findOne(filter);
+            const newBalance = user.balance + 40;
+
+            const updateDocument = {
+                $set: {
+                    firstTimeLogin: 'no',
+                    balance: newBalance,
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDocument);
+
+            res.send(result)
         })
 
 
