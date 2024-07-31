@@ -171,7 +171,7 @@ async function run() {
 
 
         //update user info after first login
-        app.patch('/usersFirstLogin', async (req, res) => {
+        app.patch('/usersFirstLogin', verifyToken, async (req, res) => {
             const { id } = req.body;
 
             const filter = { _id: new ObjectId(id) };
@@ -188,6 +188,52 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDocument);
 
             res.send(result)
+        })
+
+
+        //update user info after first login
+        app.patch('/usersFirstLogin', verifyToken, async (req, res) => {
+            const { id } = req.body;
+
+            const filter = { _id: new ObjectId(id) };
+            const user = await usersCollection.findOne(filter);
+
+            const newBalance = user.balance + 40;
+
+            const updateDocument = {
+                $set: {
+                    firstTimeLogin: 'no',
+                    balance: newBalance,
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDocument);
+
+            res.send(result)
+        })
+
+
+        //update agent info after first login
+        app.patch('/agentsFirstLogin', verifyToken, async (req, res) => {
+            const { id } = req.body;
+
+            const filter = { _id: new ObjectId(id) };
+            const user = await usersCollection.findOne(filter);
+
+
+            const newBalance = user.balance + 10000;
+
+            const updateDocument = {
+                $set: {
+                    firstTimeLogin: 'no',
+                    balance: newBalance,
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDocument);
+
+            res.send(result)
+
         })
 
 
