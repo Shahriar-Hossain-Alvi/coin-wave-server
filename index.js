@@ -237,6 +237,30 @@ async function run() {
         })
 
 
+        //search for receiver before sending money
+        app.get('/receiverInfo', async (req, res) => {
+
+            const receiverNumber = req.query.receiverNumber;
+            const senderNumber = req.query.senderNumber;
+
+            const query = {
+                mobileNumber: receiverNumber
+            }
+
+            const receiver = await usersCollection.findOne(query);
+
+            if (!receiver) {
+                return res.send({ message: "not found" })
+            }
+
+            else if (receiver.mobileNumber === senderNumber) {
+                return res.send({ message: "same number" });
+            }
+
+            res.send(receiver);
+        })
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
