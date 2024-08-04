@@ -35,6 +35,8 @@ async function run() {
         await client.connect();
 
         const usersCollection = client.db("coinWave").collection("users");
+        const sendMoneyCollection = client.db("coinWave").collection("sendMoney");
+        const serviceChargeCollection = client.db("coinWave").collection("serviceCharge");
 
 
         //jwt related api
@@ -238,7 +240,7 @@ async function run() {
 
 
         //search for receiver before sending money
-        app.get('/receiverInfo', async (req, res) => {
+        app.get('/receiverInfo', verifyToken, async (req, res) => {
 
             const receiverNumber = req.query.receiverNumber;
             const senderNumber = req.query.senderNumber;
@@ -249,7 +251,7 @@ async function run() {
 
             const receiver = await usersCollection.findOne(query);
 
-            if (!receiver) {
+            if (!receiver || receiver.role !== 'user') {
                 return res.send({ message: "not found" })
             }
 
@@ -259,6 +261,62 @@ async function run() {
 
             res.send(receiver);
         })
+
+        //add the send money info to server database
+        app.post('/sendMoney', verifyToken, async (req, res) => {
+
+            // get the data from the client side
+            const { senderName, senderEmail, senderMobileNumber, receiverName, receiverEmail, receiverMobileNumber, sentAmount, pin } = req.body;
+
+            // get sender info from users collection
+            const getSenderInfo = await usersCollection.findOne({ email: senderEmail });
+
+
+            // Compare the senders PIN with the stored hashed PIN
+            const sendersStoredPin = getSenderInfo.pin;
+            const isMatch = bcrypt.compareSync(pin.toString(), sendersStoredPin);
+
+            if (!isMatch) {
+                return res.send({ message: "Incorrect PIN number" });
+            }
+
+
+            // Deduct 5 TK as service charge if the sent amount is greater than 100 TK also deduct sent amount from users balance
+            let serviceCharge = 0;
+            if (sentAmount > 100) {
+                serviceCharge = 5;
+            }
+            const newBalance = getSenderInfo.balance - sentAmount - serviceCharge;
+
+            // Update sender's balance
+            await usersCollection.updateOne(
+                { email: senderEmail },
+                { $set: { balance: newBalance } }
+            );
+
+
+            //generate transaction ID and insert the transaction data inn the DB
+            const transactionId = `Tnx${Date.now()}`;
+
+            sendMoneyInfo = { senderName, senderEmail, senderMobileNumber, receiverName, receiverEmail, receiverMobileNumber, sentAmount, transactionId }
+
+            const result = await sendMoneyCollection.insertOne(sendMoneyInfo);
+
+            // insert service charge into the serviceChargeCollection
+            if (serviceCharge > 0) {
+                await serviceChargeCollection.insertOne({
+                    transactionId,
+                    senderEmail,
+                    senderMobileNumber,
+                    senderName,
+                    sentAmount,
+                    serviceCharge,
+                    date: new Date()
+                });
+            }
+
+            res.send(result);
+        });
 
 
         // Send a ping to confirm a successful connection
