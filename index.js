@@ -288,6 +288,7 @@ async function run() {
             }
             const newBalance = getSenderInfo.balance - sentAmount - serviceCharge;
 
+
             // Update sender's balance
             await usersCollection.updateOne(
                 { email: senderEmail },
@@ -317,6 +318,32 @@ async function run() {
 
             res.send(result);
         });
+
+        //update the money in the receivers account
+        app.patch('/updateReceiversBalance', verifyToken, async (req, res) => {
+            const { sentAmount, receiverEmail } = req.body;
+
+            const query = {
+                email: receiverEmail
+            }
+
+            //get receivers info
+            const receiver = await usersCollection.findOne(query);
+
+            //set new balance
+            const currentBalance = receiver.balance;
+            const updatedBalance = currentBalance + sentAmount;
+
+            const updateDocument = {
+                $set: {
+                    balance: updatedBalance
+                }
+            }
+
+            const result = await usersCollection.updateOne(query, updateDocument);
+
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
