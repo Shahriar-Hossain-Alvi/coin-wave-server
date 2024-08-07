@@ -298,8 +298,9 @@ async function run() {
 
             //generate transaction ID and insert the transaction data inn the DB
             const transactionId = `Tnx${Date.now()}`;
+            const transactionTime = new Date();
 
-            sendMoneyInfo = { senderName, senderEmail, senderMobileNumber, receiverName, receiverEmail, receiverMobileNumber, sentAmount, transactionId }
+            sendMoneyInfo = { senderName, senderEmail, senderMobileNumber, receiverName, receiverEmail, receiverMobileNumber, sentAmount, transactionId, transactionTime }
 
             const result = await sendMoneyCollection.insertOne(sendMoneyInfo);
 
@@ -344,6 +345,19 @@ async function run() {
 
             res.send(result);
         })
+
+
+        //get transaction record for current user
+        app.get('/usersTransaction/:email', verifyToken, async(req, res)=>{
+            const email = req.params.email;
+            const query = {
+                senderEmail: email
+            }
+            const result = await sendMoneyCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
 
 
         // Send a ping to confirm a successful connection
