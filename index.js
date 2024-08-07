@@ -348,12 +348,19 @@ async function run() {
 
 
         //get transaction record for current user
-        app.get('/usersTransaction/:email', verifyToken, async(req, res)=>{
+        app.get('/usersTransaction/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = {
                 senderEmail: email
             }
             const result = await sendMoneyCollection.find(query).toArray();
+            res.send(result);
+        });
+
+
+        //get all transaction record for admin
+        app.get('/allTransactions', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await sendMoneyCollection.find().toArray();
             res.send(result);
         })
 
