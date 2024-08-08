@@ -11,10 +11,10 @@ const port = process.env.PORT || 5000;
 
 
 //middleware
-app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:5173']
+    origin: ['http://localhost:5173', 'https://coin-wave-financial-service.netlify.app']
 }))
+app.use(express.json());
 
 
 
@@ -363,7 +363,6 @@ async function run() {
             const result = await sendMoneyCollection.find().toArray();
             res.send(result);
         })
-
 
 
 
