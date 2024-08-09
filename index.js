@@ -12,7 +12,8 @@ const port = process.env.PORT || 5000;
 
 //middleware
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://coin-wave-financial-service.netlify.app']
+    origin: ['http://localhost:5173',
+        'https://coin-wave-financial-service.netlify.app', 'https://coin-wave-financial-service.netlify.app/login']
 }))
 app.use(express.json());
 
@@ -37,6 +38,7 @@ async function run() {
         const usersCollection = client.db("coinWave").collection("users");
         const sendMoneyCollection = client.db("coinWave").collection("sendMoney");
         const serviceChargeCollection = client.db("coinWave").collection("serviceCharge");
+        const cashInRequestCollection = client.db("coinWave").collection("cashIn");
 
 
         //jwt related api
@@ -222,7 +224,6 @@ async function run() {
             const filter = { _id: new ObjectId(id) };
             const user = await usersCollection.findOne(filter);
 
-
             const newBalance = user.balance + 10000;
 
             const updateDocument = {
@@ -234,8 +235,7 @@ async function run() {
 
             const result = await usersCollection.updateOne(filter, updateDocument);
 
-            res.send(result)
-
+            res.send(result);
         })
 
 
@@ -348,8 +348,9 @@ async function run() {
 
 
         //get transaction record for current user
-        app.get('/usersTransaction/:email', verifyToken, async (req, res) => {
+        app.get('/transactions/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
+
             const query = {
                 senderEmail: email
             }
@@ -364,6 +365,25 @@ async function run() {
             res.send(result);
         })
 
+
+        //get agents list for cash in
+        app.get('/agentsList', verifyToken, async (req, res) => {
+            const query = {
+                role: 'agent'
+            }
+
+            const result = await usersCollection.find(query).toArray();
+
+            res.send(result);
+        });
+
+        app.post('/cashInRequest', verifyToken, async (req, res) => {
+            const cashInRequestInfo = req.body;
+
+            const result = await cashInRequestCollection.insertOne(cashInRequestInfo);
+
+            res.send({message: 'successful'});
+        })
 
 
         // Send a ping to confirm a successful connection
