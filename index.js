@@ -393,11 +393,28 @@ async function run() {
             const agentsEmailAddress = req.query;
             const email = agentsEmailAddress.agentEmail;
 
-            const result = await cashInRequestCollection.find({agentEmail:email}).toArray();
+            const result = await cashInRequestCollection.find({ agentEmail: email }).toArray();
 
             res.send(result);
         })
 
+
+        // add a status like accepted or rejected in cash in data
+        app.patch('/cashInRequests', verifyToken, async (req, res) => {
+            const { cashInId, cashInRequestStatus } = req.body;
+
+            const filter = { _id: new ObjectId(cashInId) };
+
+            const updateDocument = {
+                $set: {
+                    cashInRequestStatus: cashInRequestStatus,
+                },
+            };
+
+            const result = await cashInRequestCollection.updateOne(filter, updateDocument);
+
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
