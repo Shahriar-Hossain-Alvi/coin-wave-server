@@ -377,12 +377,25 @@ async function run() {
             res.send(result);
         });
 
+
+        // add cash in request to the server
         app.post('/cashInRequest', verifyToken, async (req, res) => {
             const cashInRequestInfo = req.body;
 
             const result = await cashInRequestCollection.insertOne(cashInRequestInfo);
 
-            res.send({message: 'successful'});
+            res.send({ message: 'successful' });
+        })
+
+
+        // get cash in requests from the DB for the agent
+        app.get('/cashInRequests', verifyToken, async (req, res) => {
+            const agentsEmailAddress = req.query;
+            const email = agentsEmailAddress.agentEmail;
+
+            const result = await cashInRequestCollection.find({agentEmail:email}).toArray();
+
+            res.send(result);
         })
 
 
