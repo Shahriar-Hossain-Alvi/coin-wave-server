@@ -403,6 +403,7 @@ async function run() {
         app.patch('/cashInRequests', verifyToken, async (req, res) => {
             const { cashInId, cashInRequestStatus } = req.body;
 
+            // update cash in collection
             const filter = { _id: new ObjectId(cashInId) };
 
             const updateDocument = {
@@ -414,6 +415,56 @@ async function run() {
             const result = await cashInRequestCollection.updateOne(filter, updateDocument);
 
             res.send(result);
+        })
+
+
+        // update users and agents balance after successful cash in
+        app.patch('/updateUserAndAgentBalanceAfterCashIn', verifyToken, async (req, res) => {
+            const updatedInfo = req.body;
+            
+            const { userEmail, agentEmail, cashInAmount } = updatedInfo;
+
+            // get the user and agent info to get their balance
+            const user = await usersCollection.findOne
+                ({ email: userEmail });
+
+            const agent = await usersCollection.findOne({ email: agentEmail });
+
+            //set new balance for user
+            const usersCurrentBalance = user.balance;
+            const usersUpdatedBalance = usersCurrentBalance + cashInAmount;
+
+            const usersUpdateDocument = {
+                $set: {
+                    balance: usersUpdatedBalance,
+                },
+            }
+
+
+            //set new balance for agent
+            const agentsCurrentBalance = agent.balance;
+            const agentsUpdatedBalance = agentsCurrentBalance - cashInAmount;
+
+            const agentsUpdateDocument = {
+                $set: {
+                    balance: agentsUpdatedBalance,
+                },
+            }
+
+            // Perform both updates in parallel
+            const [userUpdateResult, agentUpdateResult] = await Promise.all([
+                usersCollection.updateOne({ email: userEmail }, usersUpdateDocument),
+
+                usersCollection.updateOne({ email: agentEmail }, agentsUpdateDocument)
+            ]);
+
+            // Check if both updates were successful
+            if (userUpdateResult.modifiedCount > 0 && agentUpdateResult.modifiedCount > 0) {
+                res.send({ success: true, message: "Balances updated successfully" });
+            } else {
+                res.status(400).send({ success: false, message: "Failed to update balances" });
+            }
+
         })
 
         // Send a ping to confirm a successful connection
