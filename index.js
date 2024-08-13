@@ -39,6 +39,7 @@ async function run() {
         const sendMoneyCollection = client.db("coinWave").collection("sendMoney");
         const serviceChargeCollection = client.db("coinWave").collection("serviceCharge");
         const cashInRequestCollection = client.db("coinWave").collection("cashIn");
+        const cashOutRequestCollection = client.db("coinWave").collection("cashOut");
 
 
         //jwt related api
@@ -366,7 +367,7 @@ async function run() {
         })
 
 
-        //get agents list for cash in
+        //get agents list for cash in or out
         app.get('/agentsList', verifyToken, async (req, res) => {
             const query = {
                 role: 'agent'
@@ -421,7 +422,7 @@ async function run() {
         // update users and agents balance after successful cash in
         app.patch('/updateUserAndAgentBalanceAfterCashIn', verifyToken, async (req, res) => {
             const updatedInfo = req.body;
-            
+
             const { userEmail, agentEmail, cashInAmount } = updatedInfo;
 
             // get the user and agent info to get their balance
@@ -466,6 +467,17 @@ async function run() {
             }
 
         })
+
+
+        // add cash out request to the server
+        app.post('/cashOutRequest', verifyToken, async (req, res) => {
+            const cashOutRequestInfo = req.body;
+
+            const result = await cashOutRequestCollection.insertOne(cashOutRequestInfo);
+
+            res.send({ message: 'successful' });
+        })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
