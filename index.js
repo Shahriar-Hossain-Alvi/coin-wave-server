@@ -566,7 +566,7 @@ async function run() {
 
 
         // get data for admin dashboard
-        app.get("/adminPanelData", async (req, res) => {
+        app.get("/adminPanelData", verifyToken, verifyAdmin, async (req, res) => {
 
             // get total sent amount
             const getTotalSentAmount = await sendMoneyCollection.aggregate([
@@ -599,14 +599,14 @@ async function run() {
 
 
             // get latest users and agents
-            const getLatestUsers = await usersCollection.find().limit(4).toArray();
-            
+            const latestUsers = await usersCollection.find().sort({ _id: -1 }).limit(3).toArray();
+
 
             // get recent transactions
-            const getRecentTransactions = await sendMoneyCollection.find().limit(4).toArray();
+            const recentTransactions = await sendMoneyCollection.find().sort({_id: -1}).limit(4).toArray();
 
 
-            res.send({ totalSentMoneyAmount, totalUser, totalServiceChargeAmount, getLatestUsers, getRecentTransactions });
+            res.send({ totalSentMoneyAmount, totalUser, totalServiceChargeAmount, latestUsers, recentTransactions });
         })
 
 
