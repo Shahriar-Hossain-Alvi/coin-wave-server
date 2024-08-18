@@ -565,6 +565,51 @@ async function run() {
         })
 
 
+        // get data for admin dashboard
+        app.get("/adminPanelData", async (req, res) => {
+
+            // get total sent amount
+            const getTotalSentAmount = await sendMoneyCollection.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalSentAmount: { $sum: "$sentAmount" }
+                    }
+                }
+            ]).toArray();
+
+            const totalSentMoneyAmount = (getTotalSentAmount[0]).totalSentAmount;
+
+
+            // get total user
+            const totalUser = await usersCollection.countDocuments();
+
+
+            // get total service charge
+            const getTotalServiceCharge = await serviceChargeCollection.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalServiceCharge: { $sum: "$serviceCharge" }
+                    }
+                }
+            ]).toArray();
+
+            const totalServiceChargeAmount = (getTotalServiceCharge[0]).totalServiceCharge;
+
+
+            // get latest users and agents
+            const getLatestUsers = await usersCollection.find().limit(4).toArray();
+            
+
+            // get recent transactions
+            const getRecentTransactions = await sendMoneyCollection.find().limit(4).toArray();
+
+
+            res.send({ totalSentMoneyAmount, totalUser, totalServiceChargeAmount, getLatestUsers, getRecentTransactions });
+        })
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
