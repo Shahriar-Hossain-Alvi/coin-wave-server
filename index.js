@@ -154,7 +154,7 @@ async function run() {
 
         //get all user list for admin
         app.get('/allUsers', verifyToken, verifyAdmin, async (req, res) => {
-            const result = await usersCollection.find().toArray();
+            const result = await usersCollection.find().sort({_id: -1}).toArray();
 
             res.send(result);
         })
@@ -357,14 +357,14 @@ async function run() {
             const query = {
                 senderEmail: email
             }
-            const result = await sendMoneyCollection.find(query).toArray();
+            const result = await sendMoneyCollection.find(query).sort({_id: -1}).toArray();
             res.send(result);
         });
 
 
         //get all transaction record for admin
         app.get('/allTransactions', verifyToken, verifyAdmin, async (req, res) => {
-            const result = await sendMoneyCollection.find().toArray();
+            const result = await sendMoneyCollection.find().sort({_id: -1}).toArray();
             res.send(result);
         })
 
@@ -399,7 +399,7 @@ async function run() {
             const agentsEmailAddress = req.query;
             const email = agentsEmailAddress.agentEmail;
 
-            const result = await cashInRequestCollection.find({ agentEmail: email }).toArray();
+            const result = await cashInRequestCollection.find({ agentEmail: email }).sort({_id: -1}).toArray();
 
             res.send(result);
         })
@@ -474,9 +474,6 @@ async function run() {
         })
 
 
-
-
-
         // add cash out request to the server
         app.post('/cashOutRequest', verifyToken, async (req, res) => {
             const cashOutRequestInfo = req.body;
@@ -492,7 +489,7 @@ async function run() {
             const agentsEmailAddress = req.query;
             const email = agentsEmailAddress.agentEmail;
 
-            const result = await cashOutRequestCollection.find({ agentEmail: email }).toArray();
+            const result = await cashOutRequestCollection.find({ agentEmail: email }).sort({_id: -1}).toArray();
 
             res.send(result);
         })
