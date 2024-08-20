@@ -12,8 +12,10 @@ const port = process.env.PORT || 5000;
 
 //middleware
 app.use(cors({
-    origin: ['http://localhost:5173',
-        'https://coin-wave-financial-service.netlify.app', 'https://coin-wave-financial-service.netlify.app/login']
+    origin: [
+        'http://localhost:5173',
+        'https://coin-wave-financial-service.netlify.app'
+    ]
 }))
 app.use(express.json());
 
@@ -33,7 +35,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const usersCollection = client.db("coinWave").collection("users");
         const sendMoneyCollection = client.db("coinWave").collection("sendMoney");
@@ -603,7 +605,7 @@ async function run() {
 
 
             // get recent transactions
-            const recentTransactions = await sendMoneyCollection.find().sort({_id: -1}).limit(4).toArray();
+            const recentTransactions = await sendMoneyCollection.find().sort({ _id: -1 }).limit(4).toArray();
 
 
             res.send({ totalSentMoneyAmount, totalUser, totalServiceChargeAmount, latestUsers, recentTransactions });
